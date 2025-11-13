@@ -89,47 +89,55 @@ pnpm dev
 
 **部署步骤:**
 
-1. **Fork 仓库并创建资源**
-   
-   **a. Fork 仓库：**
+1. **Fork 仓库**
    - Fork 本仓库到你的 GitHub
-   
-   **b. 在 Cloudflare Dashboard 创建资源：**
-   - 创建 D1 数据库: `tmarks-prod-db`
-   - 创建 KV 命名空间: `RATE_LIMIT_KV`
-   - 创建 KV 命名空间: `PUBLIC_SHARE_KV`
 
-2. **配置 wrangler.toml**
-   
-   在你的 Fork 仓库中：
-   - 将 `tmarks/wrangler.toml.example` 重命名为 `tmarks/wrangler.toml`
-   - 编辑文件，将上一步记录的资源 ID 填入对应位置
-   - 提交更改
-
-3. **连接仓库创建项目**
-   - Workers & Pages → 创建 → 连接到 Git → 选择你的仓库
+2. **创建 Cloudflare Pages 项目**
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - Workers & Pages → 创建 → 连接到 Git → 选择你的 Fork 仓库
    - 配置构建设置：
      - 根目录：`tmarks`
      - 构建命令：`pnpm install && pnpm build:deploy`
      - 构建输出目录：`.deploy`
-   - 先不要点击部署，继续下一步配置
+   - 保存并部署（首次部署会失败，继续下一步配置）
 
-4. **配置环境变量**
+3. **在控制台配置资源和环境变量**
    
-   在项目设置中：
-   - 设置 → 环境变量 → 生产环境
+   进入你的项目 → 设置：
+   
+   **a. 绑定 D1 数据库：**
+   - 设置 → 函数 → D1 数据库绑定 → 添加绑定
+   - 变量名：`DB`
+   - D1 数据库：创建新数据库 `tmarks-prod-db`
+   
+   **b. 绑定 KV 命名空间：**
+   - 设置 → 函数 → KV 命名空间绑定 → 添加绑定
+   - 第一个 KV：
+     - 变量名：`RATE_LIMIT_KV`
+     - KV 命名空间：创建新命名空间 `RATE_LIMIT_KV`
+   - 第二个 KV：
+     - 变量名：`PUBLIC_SHARE_KV`
+     - KV 命名空间：创建新命名空间 `PUBLIC_SHARE_KV`
+   
+   **c. 配置环境变量：**
+   - 设置 → 环境变量 → 为生产环境定义变量
    - 添加以下变量（生成随机密钥）：
      - `JWT_SECRET`：生成一个 48 位随机字符串
      - `ENCRYPTION_KEY`：生成一个 48 位随机字符串
 
-5. **初始化数据库**
+4. **初始化数据库**
    - Workers & Pages → D1 → 打开 `tmarks-prod-db`
    - 打开仓库中的 `tmarks/migrations/d1_console_pure.sql` 文件
    - 复制 SQL 内容并在 D1 控制台执行
 
-6. **触发部署**
-   - 回到项目页面：部署 → 重试部署
+5. **重新部署**
+   - 回到项目页面 → 部署 → 重试部署
    - 等待构建完成即可访问
+
+**后续更新:**
+- 直接推送代码到 GitHub，Cloudflare 会自动构建部署
+- 所有配置都保存在 Dashboard 中，不会被代码更新影响
+
 ---
 
 ## 📄 许可证
