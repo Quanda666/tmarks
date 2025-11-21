@@ -204,7 +204,7 @@ export const onRequestGet: PagesFunction<Env, RouteParams, AuthContext>[] = [
       }
 
       // 一次性获取所有书签的快照数量
-      let snapshotCounts = new Map<string, number>()
+      const snapshotCounts = new Map<string, number>()
       
       if (bookmarkIds.length > 0) {
         try {
