@@ -2,6 +2,7 @@ import { cacheManager } from '@/lib/services/cache-manager';
 import { tagRecommender } from '@/lib/services/tag-recommender';
 import { bookmarkService } from '@/lib/services/bookmark-service';
 import { bookmarkAPI } from '@/lib/services/bookmark-api';
+import { syncPendingTabGroups } from '@/lib/services/tab-collection';
 import { StorageService } from '@/lib/utils/storage';
 import type { Message, MessageResponse } from '@/types';
 
@@ -67,6 +68,18 @@ startAutoSync().catch(() => {});
 
 // Sync pending bookmarks on startup
 bookmarkService.syncPendingBookmarks().catch(() => {});
+
+// Sync pending tab groups on startup
+(async () => {
+  try {
+    const config = await StorageService.loadConfig();
+    if (config.bookmarkSite.apiKey) {
+      await syncPendingTabGroups(config.bookmarkSite);
+    }
+  } catch (error) {
+    // Silently fail
+  }
+})();
 
 // Handle messages from popup/content scripts
 chrome.runtime.onMessage.addListener(
