@@ -100,7 +100,7 @@ export function ShareSettingsTab() {
         </div>
 
         {/* 启用开关 */}
-        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
+        <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
           <div>
             <div className="text-sm font-medium mb-1">启用公开分享</div>
             <div className="text-xs text-muted-foreground">
@@ -131,7 +131,7 @@ export function ShareSettingsTab() {
                   <button
                     onClick={handleRegenerate}
                     disabled={updateShare.isPending}
-                    className="btn btn-secondary btn-sm sm:btn flex items-center gap-2 justify-center"
+                    className="btn btn-ghost btn-sm sm:btn flex items-center gap-2 justify-center hover:bg-muted/30"
                   >
                     <RefreshCw className="w-4 h-4" />
                     <span>重新生成</span>
@@ -179,7 +179,7 @@ export function ShareSettingsTab() {
                 <button
                   onClick={handleCopyLink}
                   disabled={!shareUrl}
-                  className="btn btn-secondary flex items-center gap-2"
+                  className="btn btn-ghost flex items-center gap-2 hover:bg-muted/30"
                 >
                   <Copy className="w-4 h-4" />
                   {copied ? '已复制' : '复制'}
@@ -192,7 +192,7 @@ export function ShareSettingsTab() {
               <button
                 onClick={handleReset}
                 disabled={updateShare.isPending}
-                className="btn btn-secondary btn-sm sm:btn"
+                className="btn btn-ghost btn-sm sm:btn hover:bg-muted/30"
               >
                 重置
               </button>

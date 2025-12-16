@@ -9,6 +9,8 @@ import { LoadingMessage } from '@/components/LoadingMessage';
 import { BookmarkExistsDialog } from '@/components/BookmarkExistsDialog';
 import { ModeSelector } from './ModeSelector';
 import { TabCollectionView } from './TabCollectionView';
+import { getExistingTagClass, getSelectedTagClass, type TagTheme } from '@/lib/utils/tagStyles';
+import { applyTheme, applyThemeStyle } from '@/lib/utils/themeManager';
 
 type ViewMode = 'selector' | 'bookmark' | 'tabCollection';
 
@@ -57,6 +59,8 @@ export function Popup() {
   const [showTitleEdit, setShowTitleEdit] = useState(false);
   const [showDescEdit, setShowDescEdit] = useState(false);
 
+  const tagTheme: TagTheme = (config?.preferences?.tagTheme ?? 'classic') as TagTheme;
+
   useEffect(() => {
     setTitleOverride(currentPage?.title ?? '');
   }, [currentPage?.title]);
@@ -70,6 +74,15 @@ export function Popup() {
     loadConfig();
     loadExistingTags();
   }, []);
+
+  // Apply theme based on user preference
+  useEffect(() => {
+    applyTheme(config?.preferences?.theme ?? 'auto');
+  }, [config?.preferences?.theme]);
+
+  useEffect(() => {
+    applyThemeStyle(config?.preferences?.themeStyle ?? 'default');
+  }, [config?.preferences?.themeStyle]);
 
   // Check if configured (only need bookmark site API key, AI is optional)
   const isConfigured = Boolean(config && config.bookmarkSite.apiKey);
@@ -209,60 +222,60 @@ export function Popup() {
   // Show configuration prompt if not configured (bookmark mode)
   if (initialized && !isConfigured) {
     return (
-      <div className="relative h-[80vh] min-h-[580px] w-[380px] overflow-hidden rounded-2xl bg-slate-950 text-slate-100 shadow-2xl">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),transparent_70%)] opacity-80" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(165,180,252,0.25),transparent_65%)] opacity-80" />
-        <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-2xl" />
+      <div className="relative h-[80vh] min-h-[580px] w-[380px] overflow-hidden rounded-2xl bg-[var(--tab-popup-onboarding-bg)] text-[var(--tab-popup-primary-text)] shadow-2xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tab-popup-onboarding-radial-top),transparent_70%)] opacity-80" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_var(--tab-popup-onboarding-radial-bottom),transparent_65%)] opacity-80" />
+        <div className="absolute inset-0 bg-[color:var(--tab-popup-onboarding-overlay)] backdrop-blur-2xl" />
         <div className="relative flex h-full flex-col">
           <header className="px-6 pt-8 pb-6">
-            <div className="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-xl shadow-blue-900/20 backdrop-blur-xl">
+            <div className="rounded-3xl border border-[color:var(--tab-popup-onboarding-card-border)] bg-[color:var(--tab-popup-onboarding-card-bg)] p-5 shadow-xl shadow-[color:var(--tab-popup-onboarding-shadow)] backdrop-blur-xl">
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/40">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--tab-popup-primary-from)] to-[var(--tab-popup-primary-via)] shadow-lg shadow-[color:var(--tab-popup-primary-shadow-strong)]">
+                  <svg className="h-6 w-6 text-[var(--tab-popup-primary-text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-[0.18em] text-white/60">Onboarding</p>
-                  <h1 className="text-2xl font-semibold text-white">欢迎使用 AI 书签助手</h1>
-                  <p className="text-sm text-white/70">完成基础配置，即可为任意网页生成智能标签与分类建议。</p>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--tab-popup-onboarding-label)]">Onboarding</p>
+                  <h1 className="text-2xl font-semibold text-[var(--tab-popup-primary-text)]">欢迎使用 AI 书签助手</h1>
+                  <p className="text-sm text-[color:var(--tab-popup-onboarding-desc)]">完成基础配置，即可为任意网页生成智能标签与分类建议。</p>
                 </div>
               </div>
             </div>
           </header>
 
           <main className="flex-1 space-y-5 overflow-y-auto px-6 pb-6">
-            <section className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-inner shadow-indigo-500/10 backdrop-blur-xl">
-              <h2 className="text-sm font-semibold text-white">必备信息</h2>
-              <p className="mt-1 text-xs text-white/60">准备以下三项配置，助手即可立即开始工作：</p>
-              <ol className="mt-4 space-y-3 text-xs text-white/75">
-                <li className="flex gap-3 rounded-2xl border border-white/5 bg-white/5 p-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-blue-500/30 text-[11px] font-semibold text-blue-100">1</span>
+            <section className="rounded-3xl border border-[color:var(--tab-popup-onboarding-card-border)] bg-[color:var(--tab-popup-onboarding-subtle-bg)] p-5 shadow-inner shadow-[color:var(--tab-popup-onboarding-shadow)] backdrop-blur-xl">
+              <h2 className="text-sm font-semibold text-[var(--tab-popup-primary-text)]">必备信息</h2>
+              <p className="mt-1 text-xs text-[color:var(--tab-popup-onboarding-label)]">准备以下三项配置，助手即可立即开始工作：</p>
+              <ol className="mt-4 space-y-3 text-xs text-[color:var(--tab-popup-onboarding-desc)]">
+                <li className="flex gap-3 rounded-2xl border border-[color:var(--tab-popup-onboarding-subtle-border)] bg-[color:var(--tab-popup-onboarding-subtle-bg)] p-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-[color:var(--tab-popup-onboarding-tip-bg)] text-[11px] font-semibold text-[var(--tab-popup-onboarding-tip-text)]">1</span>
                   <div>
-                    <p className="font-semibold text-white">AI 服务 API Key</p>
-                    <p className="mt-1 text-[11px] text-white/60">用于生成智能标签的模型凭证，支持多个主流服务商。</p>
+                    <p className="font-semibold text-[var(--tab-popup-primary-text)]">AI 服务 API Key</p>
+                    <p className="mt-1 text-[11px] text-[color:var(--tab-popup-onboarding-label)]">用于生成智能标签的模型凭证，支持多个主流服务商。</p>
                   </div>
                 </li>
-                <li className="flex gap-3 rounded-2xl border border-white/5 bg-white/5 p-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-blue-500/30 text-[11px] font-semibold text-blue-100">2</span>
+                <li className="flex gap-3 rounded-2xl border border-[color:var(--tab-popup-onboarding-subtle-border)] bg-[color:var(--tab-popup-onboarding-subtle-bg)] p-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-[color:var(--tab-popup-onboarding-tip-bg)] text-[11px] font-semibold text-[var(--tab-popup-onboarding-tip-text)]">2</span>
                   <div>
-                    <p className="font-semibold text-white">书签站点 API 地址</p>
-                    <p className="mt-1 text-[11px] text-white/60">指向你的书签服务端点，默认为 TMarks 官方地址。</p>
+                    <p className="font-semibold text-[var(--tab-popup-primary-text)]">书签站点 API 地址</p>
+                    <p className="mt-1 text-[11px] text-[color:var(--tab-popup-onboarding-label)]">指向你的书签服务端点，默认为 TMarks 官方地址。</p>
                   </div>
                 </li>
-                <li className="flex gap-3 rounded-2xl border border-white/5 bg-white/5 p-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-blue-500/30 text-[11px] font-semibold text-blue-100">3</span>
+                <li className="flex gap-3 rounded-2xl border border-[color:var(--tab-popup-onboarding-subtle-border)] bg-[color:var(--tab-popup-onboarding-subtle-bg)] p-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-xl bg-[color:var(--tab-popup-onboarding-tip-bg)] text-[11px] font-semibold text-[var(--tab-popup-onboarding-tip-text)]">3</span>
                   <div>
-                    <p className="font-semibold text-white">书签站点 API Key</p>
-                    <p className="mt-1 text-[11px] text-white/60">用于同步与保存书签数据，请在服务端控制台生成密钥。</p>
+                    <p className="font-semibold text-[var(--tab-popup-primary-text)]">书签站点 API Key</p>
+                    <p className="mt-1 text-[11px] text-[color:var(--tab-popup-onboarding-label)]">用于同步与保存书签数据，请在服务端控制台生成密钥。</p>
                   </div>
                 </li>
               </ol>
             </section>
 
-            <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-purple-500/10 p-5 shadow-lg shadow-blue-900/20 backdrop-blur-xl">
-              <h2 className="text-sm font-semibold text-white">小贴士</h2>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-[11px] text-white/70">
+            <section className="rounded-3xl border border-[color:var(--tab-popup-onboarding-card-border)] bg-gradient-to-br from-[color:var(--tab-popup-onboarding-tip-bg)] via-[color:var(--tab-popup-onboarding-tip-bg)] to-[color:var(--tab-popup-onboarding-tip-bg)] p-5 shadow-lg shadow-[color:var(--tab-popup-onboarding-shadow)] backdrop-blur-xl">
+              <h2 className="text-sm font-semibold text-[var(--tab-popup-primary-text)]">小贴士</h2>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-[11px] text-[color:var(--tab-popup-onboarding-desc)]">
                 <li>可在设置页保存多个 API 与模型组合，一键切换场景。</li>
                 <li>支持自定义 Prompt，满足不同标签风格或语言需求。</li>
                 <li>配置完成后，助手会自动抓取当前标签页并生成推荐。</li>
@@ -273,7 +286,7 @@ export function Popup() {
           <footer className="px-6 pb-6">
             <button
               onClick={openOptions}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/40 active:scale-95"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[var(--tab-popup-primary-from)] via-[var(--tab-popup-primary-via)] to-[var(--tab-popup-primary-to)] px-6 py-3 text-sm font-semibold text-[var(--tab-popup-primary-text)] shadow-lg shadow-[color:var(--tab-popup-primary-shadow)] transition-all duration-200 hover:shadow-xl hover:shadow-[color:var(--tab-popup-primary-shadow-strong)] active:scale-95"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -287,7 +300,7 @@ export function Popup() {
   }
 
   return (
-    <div className="relative h-[80vh] min-h-[620px] w-[380px] overflow-hidden rounded-2xl bg-white text-gray-900 shadow-2xl">
+    <div className="relative h-[80vh] min-h-[620px] w-[380px] overflow-hidden rounded-2xl bg-[var(--tab-popup-surface)] text-[var(--tab-popup-text)] shadow-2xl">
       {/* 通知消息 - 固定在最顶部 */}
       <div className="pointer-events-none fixed top-0 left-0 right-0 z-50 px-4 pt-2 space-y-2">
         {error && (
@@ -312,11 +325,11 @@ export function Popup() {
       </div>
 
       <div className="relative flex h-full flex-col">
-        <header className="fixed top-0 left-0 right-0 z-20 px-3 pt-2 pb-2.5 bg-white border-b border-gray-200 shadow-sm rounded-b-2xl">
+        <header className="fixed top-0 left-0 right-0 z-20 px-3 pt-2 pb-2.5 bg-[var(--tab-popup-surface)] border-b border-[var(--tab-popup-border)] shadow-sm rounded-b-2xl">
           <div className="flex items-center gap-2">
             <button
               onClick={handleBackToSelector}
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-gray-600 transition-all duration-200 hover:bg-gray-100 active:scale-95"
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-[var(--tab-popup-text-muted)] transition-all duration-200 hover:bg-[var(--tab-popup-action-neutral-bg)] active:scale-95"
               title="返回"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -324,35 +337,35 @@ export function Popup() {
               </svg>
             </button>
             {isAIEnabled ? (
-              <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] text-blue-600 font-medium">
+              <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-[var(--tab-popup-badge-blue-bg)] px-2 py-1 text-[10px] text-[var(--tab-popup-badge-blue-text)] font-medium">
                 推荐 {recommendedTags.length}
               </span>
             ) : (
-              <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] text-amber-600 font-medium">
+              <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-[var(--tab-popup-badge-amber-bg)] px-2 py-1 text-[10px] text-[var(--tab-popup-badge-amber-text)] font-medium">
                 AI 关闭
               </span>
             )}
-            <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-[10px] text-indigo-600 font-medium">
+            <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-[var(--tab-popup-badge-indigo-bg)] px-2 py-1 text-[10px] text-[var(--tab-popup-badge-indigo-text)] font-medium">
               已选 {selectedTags.length}
             </span>
-            <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-purple-50 px-2 py-1 text-[10px] text-purple-600 font-medium">
+            <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-[var(--tab-popup-badge-purple-bg)] px-2 py-1 text-[10px] text-[var(--tab-popup-badge-purple-text)] font-medium">
               库 {existingTags.length}
             </span>
             <div className="ml-auto flex gap-1.5">
               <button
                 onClick={() => window.close()}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-700 transition-all duration-200 hover:bg-gray-50 active:scale-95"
+                className="rounded-lg border border-[var(--tab-popup-border-strong)] bg-[var(--tab-popup-surface)] px-3 py-1.5 text-[11px] font-medium text-[var(--tab-popup-text)] transition-all duration-200 hover:bg-[var(--tab-popup-action-neutral-bg)] active:scale-95"
               >
                 取消
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving || selectedTags.length === 0}
-                className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+                className="rounded-lg bg-gradient-to-r from-[var(--tab-popup-primary-from)] to-[var(--tab-popup-primary-via)] px-4 py-1.5 text-[11px] font-semibold text-[var(--tab-popup-primary-text)] shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
               >
                 {isSaving ? (
                   <span className="flex items-center justify-center gap-1">
-                    <svg className="h-3.5 w-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <svg className="h-3.5 w-3.5 animate-spin text-[var(--tab-popup-primary-text)]" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -366,36 +379,36 @@ export function Popup() {
           </div>
         </header>
 
-        <main className="relative flex-1 space-y-2.5 overflow-y-auto px-4 pb-[70px] pt-[60px] bg-white">
+        <main className="relative flex-1 space-y-2.5 overflow-y-auto px-4 pb-[70px] pt-[60px] bg-[var(--tab-popup-bg)]">
           {isRecommending && (
-            <section className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 text-sm text-gray-700 shadow-lg">
+            <section className="flex items-center gap-3 rounded-xl border border-[var(--tab-popup-border)] bg-[var(--tab-popup-section-gray-bg)] p-3.5 text-sm text-[var(--tab-popup-text)] shadow-lg">
               <LoadingSpinner />
               <p>AI 正在分析当前页面，请稍候...</p>
             </section>
           )}
 
           {!isAIEnabled && !isRecommending && recommendedTags.length === 0 && (
-            <section className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-3.5 shadow-lg">
+            <section className="rounded-xl border border-[var(--tab-popup-section-amber-border)] bg-gradient-to-br from-[var(--tab-popup-section-amber-from)] to-[var(--tab-popup-section-amber-to)] p-3.5 shadow-lg">
               <div className="flex items-start gap-3">
-                <svg className="h-5 w-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="h-5 w-5 flex-shrink-0 text-[var(--tab-popup-section-amber-icon)] mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium text-amber-800">AI 推荐已关闭</p>
-                  <p className="mt-1 text-xs text-amber-600">请从下方标签库中选择标签，或在设置中启用 AI 推荐。</p>
+                  <p className="text-sm font-medium text-[var(--tab-popup-section-amber-title)]">AI 推荐已关闭</p>
+                  <p className="mt-1 text-xs text-[var(--tab-popup-section-amber-text)]">请从下方标签库中选择标签，或在设置中启用 AI 推荐。</p>
                 </div>
               </div>
             </section>
           )}
 
           {selectedTags.length > 0 && (
-            <section className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-3.5 shadow-lg">
+            <section className="rounded-xl border border-[var(--tab-popup-section-blue-border)] bg-gradient-to-br from-[var(--tab-popup-section-blue-from)] to-[var(--tab-popup-section-blue-to)] p-3.5 shadow-lg">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-gray-800">已选择标签</p>
-                  <span className="text-[10px] text-gray-500">点击标签可取消选择。</span>
+                  <p className="text-sm font-semibold text-[var(--tab-popup-text)]">已选择标签</p>
+                  <span className="text-[10px] text-[var(--tab-popup-text-muted)]">点击标签可取消选择。</span>
                 </div>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                <span className="rounded-full bg-[var(--tab-popup-section-blue-badge-bg)] px-2 py-0.5 text-xs font-medium text-[var(--tab-popup-section-blue-badge-text)]">
                   {selectedTags.length}
                 </span>
               </div>
@@ -405,7 +418,7 @@ export function Popup() {
                     key={tag}
                     onClick={() => toggleTag(tag)}
                     title="点击移除标签"
-                className="inline-flex items-center rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200 shadow-sm transition-all duration-200 hover:bg-blue-50 active:scale-95"
+                    className={getSelectedTagClass(tagTheme)}
                   >
                     <span className="truncate max-w-[120px]">{tag}</span>
                   </button>
@@ -415,15 +428,15 @@ export function Popup() {
           )}
 
           {currentPage && (
-            <section className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-lg">
+            <section className="rounded-xl border border-[var(--tab-popup-section-gray-border)] bg-[var(--tab-popup-section-gray-bg)] p-3.5 shadow-lg">
               <div className="mb-3 flex items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsPublic(!isPublic)}
                     className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150 ${
                       isPublic
-                        ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[var(--tab-popup-action-emerald-bg)] text-[var(--tab-popup-action-emerald-text)] hover:bg-[var(--tab-popup-action-emerald-bg-hover)]'
+                        : 'bg-[var(--tab-popup-action-neutral-bg)] text-[var(--tab-popup-action-neutral-text)] hover:bg-[var(--tab-popup-action-neutral-bg-hover)]'
                     }`}
                     title={isPublic ? '公开（点击切换为隐私）' : '隐私（点击切换为公开）'}
                   >
@@ -442,8 +455,8 @@ export function Popup() {
                     disabled={!currentPage.thumbnail}
                     className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150 ${
                       includeThumbnail
-                        ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[var(--tab-popup-action-amber-bg)] text-[var(--tab-popup-action-amber-text)] hover:bg-[var(--tab-popup-action-amber-bg-hover)]'
+                        : 'bg-[var(--tab-popup-action-neutral-bg)] text-[var(--tab-popup-action-neutral-text)] hover:bg-[var(--tab-popup-action-neutral-bg-hover)]'
                     } ${!currentPage.thumbnail ? 'cursor-not-allowed opacity-40' : ''}`}
                     title={includeThumbnail ? '包含封面图（点击取消）' : '不包含封面图（点击添加）'}
                   >
@@ -457,8 +470,8 @@ export function Popup() {
                     onClick={() => setCreateSnapshot(!createSnapshot)}
                     className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150 ${
                       createSnapshot
-                        ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[var(--tab-popup-action-purple-bg)] text-[var(--tab-popup-action-purple-text)] hover:bg-[var(--tab-popup-action-purple-bg-hover)]'
+                        : 'bg-[var(--tab-popup-action-neutral-bg)] text-[var(--tab-popup-action-neutral-text)] hover:bg-[var(--tab-popup-action-neutral-bg-hover)]'
                     }`}
                     title={createSnapshot ? '创建快照（点击取消）' : '不创建快照（点击创建）'}
                   >
@@ -473,8 +486,8 @@ export function Popup() {
                     onClick={() => setShowTitleEdit(!showTitleEdit)}
                     className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150 ${
                       showTitleEdit
-                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[var(--tab-popup-action-blue-bg)] text-[var(--tab-popup-action-blue-text)] hover:bg-[var(--tab-popup-action-blue-bg-hover)]'
+                        : 'bg-[var(--tab-popup-action-neutral-bg)] text-[var(--tab-popup-action-neutral-text)] hover:bg-[var(--tab-popup-action-neutral-bg-hover)]'
                     }`}
                     title={showTitleEdit ? '修改标题（点击收起）' : '修改标题（点击展开）'}
                   >
@@ -488,8 +501,8 @@ export function Popup() {
                     onClick={() => setShowDescEdit(!showDescEdit)}
                     className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-150 ${
                       showDescEdit
-                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-[var(--tab-popup-action-blue-bg)] text-[var(--tab-popup-action-blue-text)] hover:bg-[var(--tab-popup-action-blue-bg-hover)]'
+                        : 'bg-[var(--tab-popup-action-neutral-bg)] text-[var(--tab-popup-action-neutral-text)] hover:bg-[var(--tab-popup-action-neutral-bg-hover)]'
                     }`}
                     title={showDescEdit ? '修改描述（点击收起）' : '修改描述（点击展开）'}
                   >
@@ -513,13 +526,13 @@ export function Popup() {
                         }
                       }}
                       placeholder="输入自定义标题后回车或点击应用"
-                      className="flex-1 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 rounded-xl border border-[var(--tab-popup-input-border)] bg-[var(--tab-popup-input-bg)] px-3 py-2 text-sm text-[var(--tab-popup-input-text)] placeholder:text-[var(--tab-popup-input-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--tab-popup-input-focus-ring)] focus:border-[var(--tab-popup-input-focus-border)]"
                       autoFocus
                     />
                     <button
                       onClick={handleApplyTitleOverride}
                       disabled={!titleOverride.trim() || !currentPage}
-                      className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+                      className="rounded-xl bg-gradient-to-r from-[var(--tab-popup-primary-from)] to-[var(--tab-popup-primary-via)] px-4 py-2 text-sm font-medium text-[var(--tab-popup-primary-text)] shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
                     >
                       应用
                     </button>
@@ -539,13 +552,13 @@ export function Popup() {
                       }}
                       placeholder="输入自定义描述后 Ctrl+Enter 或点击应用"
                       rows={2}
-                      className="flex-1 rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      className="flex-1 rounded-xl border border-[var(--tab-popup-input-border)] bg-[var(--tab-popup-input-bg)] px-3 py-2 text-sm text-[var(--tab-popup-input-text)] placeholder:text-[var(--tab-popup-input-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--tab-popup-input-focus-ring)] focus:border-[var(--tab-popup-input-focus-border)] resize-none"
                       autoFocus
                     />
                     <button
                       onClick={handleApplyDescriptionOverride}
                       disabled={!currentPage}
-                      className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+                      className="rounded-xl bg-gradient-to-r from-[var(--tab-popup-primary-from)] to-[var(--tab-popup-primary-via)] px-4 py-2 text-sm font-medium text-[var(--tab-popup-primary-text)] shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
                     >
                       应用
                     </button>
@@ -567,41 +580,41 @@ export function Popup() {
           )}
 
           {recommendedTags.length > 0 && (
-            <section className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50 p-3.5 shadow-lg">
+            <section className="rounded-xl border border-[var(--tab-popup-section-purple-border)] bg-gradient-to-br from-[var(--tab-popup-section-purple-from)] to-[var(--tab-popup-section-purple-to)] p-3.5 shadow-lg">
               <div className="mb-2.5 flex items-center justify-between">
                 <div>
-                  <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--tab-popup-text)]">
                     AI 推荐
                   </h2>
-                  <p className="mt-1 text-xs text-gray-600">根据页面内容实时生成，点击可快速选择。</p>
+                  <p className="mt-1 text-xs text-[var(--tab-popup-text-muted)]">根据页面内容实时生成，点击可快速选择。</p>
                 </div>
-                <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                <span className="rounded-full bg-[var(--tab-popup-section-purple-badge-bg)] px-2 py-0.5 text-xs font-medium text-[var(--tab-popup-section-purple-badge-text)]">
                   {recommendedTags.length}
                 </span>
               </div>
-              <TagList tags={recommendedTags} selectedTags={selectedTags} onToggle={toggleTag} />
+              <TagList tags={recommendedTags} selectedTags={selectedTags} onToggle={toggleTag} theme={tagTheme} />
             </section>
           )}
 
-          <section className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 shadow-lg">
+          <section className="rounded-xl border border-[var(--tab-popup-section-emerald-border)] bg-gradient-to-br from-[var(--tab-popup-section-emerald-from)] to-[var(--tab-popup-section-emerald-to)] p-3.5 shadow-lg">
             <div className="mb-2.5 flex items-center justify-between">
               <div>
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                  <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--tab-popup-text)]">
+                  <svg className="h-4 w-4 text-[var(--tab-popup-section-emerald-icon)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                   标签库
                 </h2>
-                <p className="mt-1 text-xs text-gray-600">与你的历史标签数据同步，点选即可加入。</p>
+                <p className="mt-1 text-xs text-[var(--tab-popup-text-muted)]">与你的历史标签数据同步，点选即可加入。</p>
               </div>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+              <span className="rounded-full bg-[var(--tab-popup-section-emerald-badge-bg)] px-2 py-0.5 text-xs font-medium text-[var(--tab-popup-section-emerald-badge-text)]">
                 {existingTags.length}
               </span>
             </div>
-            <div className="max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className="max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[var(--tab-popup-border-strong)] scrollbar-track-transparent">
               {existingTags.length === 0 ? (
                 <div className="flex items-center justify-center py-6">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[var(--tab-popup-text-muted)]">
                     {isLoading ? '加载中...' : '暂无标签'}
                   </p>
                 </div>
@@ -616,15 +629,15 @@ export function Popup() {
                           key={tag.id}
                           onClick={() => toggleTag(tag.name)}
                           className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium transition-all duration-200 active:scale-95 ${
-                            isSelected
-                              ? 'border border-emerald-300 bg-emerald-100 text-emerald-700 shadow-sm'
-                              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                            getExistingTagClass(tagTheme, isSelected)
                           }`}
                         >
-                          <span
-                            className="mr-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                            style={{ backgroundColor: tag.color || '#34d399' }}
-                          />
+                          {tagTheme !== 'bw' && (
+                            <span
+                              className="mr-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                              style={{ backgroundColor: tag.color || 'var(--tab-message-success-icon)' }}
+                            />
+                          )}
                           <span className="truncate max-w-[110px]">{tag.name}</span>
                           {tag.count > 0 && (
                             <span className="ml-1 text-[10px] opacity-60">({tag.count})</span>
@@ -638,16 +651,16 @@ export function Popup() {
           </section>
 
           {lastSaveDurationMs !== null && (
-            <section className="rounded-xl border border-gray-200 bg-white p-2.5 text-xs text-gray-600 shadow-sm">
+            <section className="rounded-xl border border-[var(--tab-popup-section-gray-border)] bg-[var(--tab-popup-section-gray-bg)] p-2.5 text-xs text-[var(--tab-popup-text-muted)] shadow-sm">
               最近一次保存耗时 {(lastSaveDurationMs / 1000).toFixed(2)}s
             </section>
           )}
         </main>
 
         {/* Fixed Footer - Custom Tag Input */}
-        <footer className="fixed bottom-0 left-0 right-0 z-20 px-3 pt-2 pb-2.5 bg-white border-t border-gray-200 shadow-sm rounded-t-2xl">
+        <footer className="fixed bottom-0 left-0 right-0 z-20 px-3 pt-2 pb-2.5 bg-[var(--tab-popup-footer-bg)] border-t border-[var(--tab-popup-footer-border)] shadow-sm rounded-t-2xl">
           <div className="flex items-center gap-2">
-            <svg className="h-4 w-4 flex-shrink-0 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-4 w-4 flex-shrink-0 text-[var(--tab-popup-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             <input
@@ -656,12 +669,12 @@ export function Popup() {
               onChange={(e) => setCustomTagInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="输入标签名并回车添加"
-              className="flex-1 rounded-xl border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 rounded-xl border border-[var(--tab-popup-input-border)] bg-[var(--tab-popup-input-bg)] px-3 py-1.5 text-sm text-[var(--tab-popup-input-text)] placeholder:text-[var(--tab-popup-input-placeholder)] focus:outline-none focus:ring-2 focus:ring-[var(--tab-popup-input-focus-ring)] focus:border-[var(--tab-popup-input-focus-border)]"
             />
             <button
               onClick={handleAddCustomTag}
               disabled={!customTagInput.trim()}
-              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+              className="rounded-xl bg-gradient-to-r from-[var(--tab-popup-primary-from)] to-[var(--tab-popup-primary-via)] px-4 py-1.5 text-sm font-medium text-[var(--tab-popup-primary-text)] shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
             >
               添加
             </button>

@@ -5,9 +5,10 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { Plus, Edit, FolderPlus } from 'lucide-react';
 import { useNewtabStore } from './hooks/useNewtabStore';
+import { useBrowserBookmarksSync } from './hooks/useBrowserBookmarksSync';
 import { Clock } from './components/Clock';
 import { SearchBar } from './components/SearchBar';
-import { ShortcutGrid } from './components/ShortcutGrid';
+import { WidgetGrid } from './components/WidgetGrid';
 import { Wallpaper } from './components/Wallpaper';
 import { DockBar } from './components/DockBar';
 import { Greeting } from './components/Greeting';
@@ -16,13 +17,14 @@ import { Poetry } from './components/Poetry';
 import { GroupSidebar } from './components/GroupSidebar';
 import { SettingsPanel } from './components/SettingsPanel';
 import { AddShortcutModal } from './components/AddShortcutModal';
-import { AddFolderModal } from './components/AddFolderModal';
+import { AddBookmarkFolderModal } from './components/AddBookmarkFolderModal';
 import { BatchEditModal } from './components/BatchEditModal';
 import { ShortcutContextMenu } from './components/ShortcutContextMenu';
 import { FAVICON_API } from './constants';
 
 export function NewTab() {
-  const { settings, isLoading, loadData, updateSettings, shortcutGroups, activeGroupId, setActiveGroup, addShortcut, addFolder } = useNewtabStore();
+  const { settings, isLoading, loadData, updateSettings, shortcutGroups, activeGroupId, setActiveGroup, addGridItem } = useNewtabStore();
+  useBrowserBookmarksSync();
   const [showSettings, setShowSettings] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
@@ -129,6 +131,12 @@ export function NewTab() {
     };
   }, [handleContextMenu]);
 
+  // 壁纸刷新回调
+  const handleWallpaperRefresh = useCallback(() => {
+    // 壁纸刷新后的回调，可以在这里添加提示等
+    console.log('Wallpaper refreshed');
+  }, []);
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-[#1a1a2e]">
@@ -140,7 +148,7 @@ export function NewTab() {
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* 壁纸背景 */}
-      <Wallpaper config={settings.wallpaper} />
+      <Wallpaper config={settings.wallpaper} onRefresh={handleWallpaperRefresh} />
 
 
 
@@ -194,12 +202,7 @@ export function NewTab() {
         {settings.showShortcuts && (
           <div className="w-full max-w-5xl animate-fadeIn px-4 shortcut-area">
             <div className="flex items-start gap-4">
-              <ShortcutGrid 
-                columns={settings.shortcutColumns} 
-                style={settings.shortcutStyle}
-                onAddClick={() => setShowAddModal(true)}
-                onBatchEditClick={() => setShowBatchEdit(true)}
-              />
+              <WidgetGrid columns={settings.shortcutColumns} />
             </div>
           </div>
         )}
@@ -222,11 +225,13 @@ export function NewTab() {
           onClose={() => setShowAddModal(false)}
           onAdd={(url, title) => {
             const domain = new URL(url).hostname;
-            addShortcut({
-              url,
-              title,
-              favicon: `${FAVICON_API}${domain}&sz=64`,
+            addGridItem('shortcut', {
               groupId: activeGroupId || undefined,
+              shortcut: {
+                url,
+                title,
+                favicon: `${FAVICON_API}${domain}&sz=64`,
+              },
             });
           }}
           groupName={
@@ -244,10 +249,15 @@ export function NewTab() {
       />
 
       {/* 添加文件夹弹窗 */}
-      <AddFolderModal
+      <AddBookmarkFolderModal
         isOpen={showAddFolderModal}
         onClose={() => setShowAddFolderModal(false)}
-        onSave={(name) => addFolder(name, activeGroupId ?? undefined)}
+        onSave={(name) =>
+          addGridItem('bookmarkFolder', {
+            groupId: activeGroupId ?? undefined,
+            bookmarkFolder: { title: name },
+          })
+        }
       />
 
       {/* 右键菜单 */}

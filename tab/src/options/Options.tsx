@@ -10,11 +10,14 @@ import { TMarksConfigSection } from './components/TMarksConfigSection';
 import { PreferencesSection } from './components/PreferencesSection';
 import { CacheStatusSection } from './components/CacheStatusSection';
 import { canFetchModels, fetchAvailableModels } from '@/lib/services/ai-models';
+import { applyTheme, applyThemeStyle, initThemeListener } from '@/lib/utils/themeManager';
 
 export function Options() {
   const { config, loadConfig, saveConfig, syncCache, error, successMessage, isLoading, setError, setSuccessMessage } = useAppStore();
 
   const [formData, setFormData] = useState({
+    theme: 'auto' as 'light' | 'dark' | 'auto',
+    themeStyle: 'default' as 'default' | 'bw' | 'tmarks',
     aiProvider: 'openai' as AIProvider,
     apiKey: '',
     apiUrl: '',
@@ -27,7 +30,8 @@ export function Options() {
     defaultVisibility: 'public' as 'public' | 'private',
     enableAI: true,
     defaultIncludeThumbnail: true,
-    defaultCreateSnapshot: false
+    defaultCreateSnapshot: false,
+    tagTheme: 'classic' as 'classic' | 'mono' | 'bw'
   });
 
   const [stats, setStats] = useState({
@@ -227,6 +231,16 @@ export function Options() {
     init();
   }, []);
 
+  // Apply theme immediately based on current form state (no need to save first)
+  useEffect(() => {
+    applyTheme(formData.theme);
+    return initThemeListener(() => formData.theme);
+  }, [formData.theme]);
+
+  useEffect(() => {
+    applyThemeStyle(formData.themeStyle);
+  }, [formData.themeStyle]);
+
   // Update form when config loads
   useEffect(() => {
     if (config) {
@@ -235,6 +249,8 @@ export function Options() {
       const currentApiUrl = config.aiConfig.apiUrls?.[currentProvider] || '';
 
       setFormData({
+        theme: config.preferences.theme ?? 'auto',
+        themeStyle: config.preferences.themeStyle ?? 'default',
         aiProvider: currentProvider,
         apiKey: currentApiKey,
         apiUrl: currentApiUrl,
@@ -247,7 +263,8 @@ export function Options() {
         defaultVisibility: config.preferences.defaultVisibility,
         enableAI: config.preferences.enableAI ?? true,
         defaultIncludeThumbnail: config.preferences.defaultIncludeThumbnail ?? true,
-        defaultCreateSnapshot: config.preferences.defaultCreateSnapshot ?? false
+        defaultCreateSnapshot: config.preferences.defaultCreateSnapshot ?? false,
+        tagTheme: config.preferences.tagTheme ?? 'classic'
       });
       const normalizedSaved = normalizeSavedConnections(config.aiConfig.savedConnections);
       setSavedConnections(normalizedSaved);
@@ -361,14 +378,16 @@ export function Options() {
           apiKey: formData.bookmarkApiKey
         },
         preferences: {
-          theme: config?.preferences.theme || 'auto',
+          theme: formData.theme,
+          themeStyle: formData.themeStyle,
           autoSync: config?.preferences.autoSync ?? true,
           syncInterval: config?.preferences.syncInterval ?? 24,
           maxSuggestedTags: formData.maxSuggestedTags,
           defaultVisibility: formData.defaultVisibility,
           enableAI: formData.enableAI,
           defaultIncludeThumbnail: formData.defaultIncludeThumbnail,
-          defaultCreateSnapshot: formData.defaultCreateSnapshot
+          defaultCreateSnapshot: formData.defaultCreateSnapshot,
+          tagTheme: formData.tagTheme
         }
       });
 
@@ -442,6 +461,8 @@ export function Options() {
   const handleReset = () => {
     if (confirm('确定要重置所有设置吗？此操作不可撤销。')) {
       setFormData({
+        theme: 'auto',
+        themeStyle: 'default',
         aiProvider: 'openai' as AIProvider,
         apiKey: '',
         apiUrl: '',
@@ -454,7 +475,8 @@ export function Options() {
         defaultVisibility: 'public',
         enableAI: true,
         defaultIncludeThumbnail: true,
-        defaultCreateSnapshot: false
+        defaultCreateSnapshot: false,
+        tagTheme: 'classic'
       });
       setSuccessMessage('设置已重置');
       setTimeout(() => setSuccessMessage(null), 2000);
@@ -519,22 +541,22 @@ export function Options() {
 
   return (
     <>
-      <div className="min-h-screen w-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="min-h-screen w-screen bg-gradient-to-br from-[var(--tab-options-page-bg-from)] via-[var(--tab-options-page-bg-via)] to-[var(--tab-options-page-bg-to)]">
         <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="relative overflow-hidden rounded-3xl border border-gray-200/70 dark:border-gray-800/60 bg-white/90 dark:bg-gray-900/90 shadow-sm backdrop-blur mb-10">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/15 via-indigo-500/10 to-purple-500/20 dark:from-blue-500/25 dark:via-indigo-500/20 dark:to-purple-500/25" />
+          <div className="relative overflow-hidden rounded-3xl border border-[color:var(--tab-options-card-border)] bg-[color:var(--tab-options-card-bg)] shadow-sm backdrop-blur mb-10">
+            <div className="absolute inset-0 bg-gradient-to-br from-[color:var(--tab-options-hero-gradient-from)] via-[color:var(--tab-options-hero-gradient-via)] to-[color:var(--tab-options-hero-gradient-to)]" />
             <div className="relative p-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-sm font-medium text-blue-600 dark:text-blue-300">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[color:var(--tab-options-pill-bg)] text-sm font-medium text-[var(--tab-options-pill-text)]">
                 设置中心
               </div>
-              <h1 className="mt-4 text-4xl font-bold text-gray-900 dark:text-white tracking-tight">个性化你的书签助理</h1>
-              <p className="mt-3 max-w-2xl text-base text-gray-600 dark:text-gray-300">
+              <h1 className="mt-4 text-4xl font-bold text-[var(--tab-options-title)] tracking-tight">个性化你的书签助理</h1>
+              <p className="mt-3 max-w-2xl text-base text-[var(--tab-options-text)]">
                 管理 AI 接入、同步策略与服务端配置，为你的工作流打造顺滑的知识收集体验。
               </p>
-              <div className="mt-6 flex flex-wrap gap-3 text-xs font-medium text-gray-500 dark:text-gray-400">
-                <span className="px-3 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/80 dark:border-white/20">AI 标签</span>
-                <span className="px-3 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/80 dark:border-white/20">多端同步</span>
-                <span className="px-3 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/80 dark:border-white/20">安全配置</span>
+              <div className="mt-6 flex flex-wrap gap-3 text-xs font-medium text-[var(--tab-options-text-muted)]">
+                <span className="px-3 py-1 rounded-full bg-[color:var(--tab-options-tag-bg)] border border-[color:var(--tab-options-tag-border)]">AI 标签</span>
+                <span className="px-3 py-1 rounded-full bg-[color:var(--tab-options-tag-bg)] border border-[color:var(--tab-options-tag-border)]">多端同步</span>
+                <span className="px-3 py-1 rounded-full bg-[color:var(--tab-options-tag-bg)] border border-[color:var(--tab-options-tag-border)]">安全配置</span>
               </div>
             </div>
           </div>
@@ -568,32 +590,32 @@ export function Options() {
             </div>
 
             <div className="lg:col-span-4 space-y-8">
-					<div className="relative overflow-hidden rounded-2xl border border-gray-200/80 dark:border-gray-800/60 bg-white/90 dark:bg-gray-900/90 shadow-sm backdrop-blur transition-shadow hover:shadow-lg">
-						<div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-500 via-gray-500 to-gray-700" />
-						<div className="p-6 pt-10 space-y-6">
-							<div>
-								<h3 className="text-xl font-semibold text-gray-900 dark:text-white">保存与同步</h3>
-								<p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-									保存当前配置或快速重置为默认状态。
-								</p>
-							</div>
-							<div className="flex flex-col sm:flex-row gap-3">
-								<button
-									onClick={handleReset}
-									className="flex-1 rounded-lg border border-gray-300/80 dark:border-gray-600/70 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-								>
-									重置设置
-								</button>
-								<button
-									onClick={handleSave}
-									disabled={isLoading}
-									className="flex-1 rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
-								>
-									{isLoading ? '保存中...' : '保存设置'}
-								</button>
-							</div>
-						</div>
-					</div>
+              <div className="relative overflow-hidden rounded-2xl border border-[color:var(--tab-options-save-card-border)] bg-[color:var(--tab-options-save-card-bg)] shadow-sm backdrop-blur transition-shadow hover:shadow-lg">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--tab-options-save-card-grad-from)] via-[var(--tab-options-save-card-grad-via)] to-[var(--tab-options-save-card-grad-to)]" />
+                <div className="p-6 pt-10 space-y-6">
+                  <div>
+                    <h3 className="text-xl font-semibold text-[var(--tab-options-title)]">保存与同步</h3>
+                    <p className="mt-2 text-sm text-[var(--tab-options-text)]">
+                      保存当前配置或快速重置为默认状态。
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleReset}
+                      className="flex-1 rounded-lg border border-[color:var(--tab-options-button-border)] px-4 py-3 text-sm font-medium text-[var(--tab-options-button-text)] hover:bg-[var(--tab-options-button-hover-bg)] transition-colors"
+                    >
+                      重置设置
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isLoading}
+                      className="flex-1 rounded-lg bg-[var(--tab-options-button-primary-bg)] px-4 py-3 text-sm font-medium text-[var(--tab-options-button-primary-text)] shadow-sm hover:bg-[var(--tab-options-button-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                    >
+                      {isLoading ? '保存中...' : '保存设置'}
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <PreferencesSection
                 formData={formData}
@@ -617,21 +639,21 @@ export function Options() {
       </div>
 
       {isPresetModalOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-blue-500/20 bg-white/95 dark:bg-gray-900/95 shadow-xl">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[color:var(--tab-options-modal-overlay)] backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[color:var(--tab-options-modal-border)] bg-[color:var(--tab-options-modal-bg)] shadow-xl">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[var(--tab-options-modal-topbar-from)] via-[var(--tab-options-modal-topbar-via)] to-[var(--tab-options-modal-topbar-to)]" />
             <div className="p-6 pt-10 space-y-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">保存当前配置</h3>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  <h3 className="text-lg font-semibold text-[var(--tab-options-title)]">保存当前配置</h3>
+                  <p className="mt-1 text-sm text-[var(--tab-options-text)]">
                     为当前 AI 设置输入一个易记的名称。
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleClosePresetModal}
-                  className="rounded-full border border-transparent px-3 py-1 text-xl leading-none text-gray-400 transition-colors hover:border-gray-200 hover:text-gray-600 dark:hover:border-gray-700 dark:hover:text-gray-300"
+                  className="rounded-full border border-transparent px-3 py-1 text-xl leading-none text-[var(--tab-options-modal-close-text)] transition-colors hover:border-[var(--tab-options-modal-close-hover-border)] hover:text-[var(--tab-options-modal-close-hover-text)]"
                   aria-label="关闭"
                 >
                   ×
@@ -639,7 +661,7 @@ export function Options() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-[var(--tab-options-text)]">
                   配置名称
                 </label>
                 <input
@@ -647,13 +669,13 @@ export function Options() {
                   value={presetLabel}
                   onChange={(e) => setPresetLabel(e.target.value)}
                   autoFocus
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-[color:var(--tab-options-button-border)] bg-[color:var(--tab-options-card-bg)] px-3 py-2 text-[var(--tab-options-title)] focus:outline-none focus:ring-2 focus:ring-[var(--tab-options-button-primary-bg)]"
                   placeholder="例如：生产环境配置"
                 />
               </div>
 
               {presetError && (
-                <div className="rounded-lg border border-red-300/70 bg-red-50/80 px-3 py-2 text-sm text-red-600 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300">
+                <div className="rounded-lg border border-[color:var(--tab-options-danger-border)] bg-[color:var(--tab-options-danger-bg)] px-3 py-2 text-sm text-[var(--tab-options-danger-text)]">
                   {presetError}
                 </div>
               )}
@@ -663,7 +685,7 @@ export function Options() {
                   type="button"
                   onClick={handleClosePresetModal}
                   disabled={isSavingPreset}
-                  className="rounded-lg border border-gray-300/80 dark:border-gray-600/70 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-200 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg border border-[color:var(--tab-options-button-border)] px-4 py-2 text-sm font-medium text-[var(--tab-options-button-text)] transition-colors hover:bg-[var(--tab-options-button-hover-bg)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   取消
                 </button>
@@ -671,7 +693,7 @@ export function Options() {
                   type="button"
                   onClick={handleConfirmSaveConnectionPreset}
                   disabled={isSavingPreset}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-[var(--tab-options-button-primary-bg)] px-4 py-2 text-sm font-medium text-[var(--tab-options-button-primary-text)] shadow-sm transition-colors hover:bg-[var(--tab-options-button-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSavingPreset ? '保存中...' : '确认保存'}
                 </button>

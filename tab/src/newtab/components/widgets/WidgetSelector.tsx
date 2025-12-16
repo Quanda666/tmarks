@@ -4,13 +4,14 @@
 
 import { memo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Link, Cloud, Clock, CheckSquare, StickyNote, TrendingUp, BookOpen } from 'lucide-react';
+import { X, Plus, Link, Cloud, Clock, CheckSquare, StickyNote, TrendingUp, BookOpen, Folder } from 'lucide-react';
 import type { GridItemType } from '../../types';
 import { WIDGET_REGISTRY } from './widgetRegistry';
 
 // 图标映射
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Link,
+  Folder,
   Cloud,
   Clock,
   CheckSquare,

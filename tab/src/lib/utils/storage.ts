@@ -16,13 +16,15 @@ const DEFAULT_CONFIG: StorageConfig = {
   },
   preferences: {
     theme: 'auto',
+    themeStyle: 'default',
     autoSync: true,
     syncInterval: 24,
     maxSuggestedTags: 5,
     defaultVisibility: 'public',
     enableAI: true,
     defaultIncludeThumbnail: true,
-    defaultCreateSnapshot: false
+    defaultCreateSnapshot: false,
+    tagTheme: 'classic'
   }
 };
 
@@ -96,13 +98,15 @@ export class StorageService {
       },
       preferences: {
         theme: config.preferences?.theme ?? defaults.preferences.theme,
+        themeStyle: config.preferences?.themeStyle ?? defaults.preferences.themeStyle,
         autoSync: config.preferences?.autoSync ?? defaults.preferences.autoSync,
         syncInterval: config.preferences?.syncInterval ?? defaults.preferences.syncInterval,
         maxSuggestedTags: config.preferences?.maxSuggestedTags ?? defaults.preferences.maxSuggestedTags,
         defaultVisibility: config.preferences?.defaultVisibility ?? defaults.preferences.defaultVisibility,
         enableAI: config.preferences?.enableAI ?? defaults.preferences.enableAI,
         defaultIncludeThumbnail: config.preferences?.defaultIncludeThumbnail ?? defaults.preferences.defaultIncludeThumbnail,
-        defaultCreateSnapshot: config.preferences?.defaultCreateSnapshot ?? defaults.preferences.defaultCreateSnapshot
+        defaultCreateSnapshot: config.preferences?.defaultCreateSnapshot ?? defaults.preferences.defaultCreateSnapshot,
+        tagTheme: config.preferences?.tagTheme ?? defaults.preferences.tagTheme
       }
     };
   }

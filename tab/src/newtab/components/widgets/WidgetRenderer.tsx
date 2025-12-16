@@ -15,10 +15,12 @@ import { NotesWidget } from './NotesWidget';
 import { HotSearchWidget } from './HotSearchWidget';
 import { PoetryWidget } from './PoetryWidget';
 import { ShortcutWidget } from './ShortcutWidget';
+import { BookmarkFolderWidget } from './BookmarkFolderWidget';
 
 // 组件映射
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<WidgetRendererProps>> = {
   shortcut: ShortcutWidget,
+  bookmarkFolder: BookmarkFolderWidget,
   weather: WeatherWidget,
   clock: ClockWidget,
   todo: TodoWidget,

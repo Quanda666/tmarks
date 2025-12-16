@@ -64,6 +64,7 @@ export interface BookmarkSiteConfig {
 
 export interface UserPreferences {
   theme: 'light' | 'dark' | 'auto';
+  themeStyle?: 'default' | 'bw' | 'tmarks';
   autoSync: boolean;
   syncInterval: number;
   maxSuggestedTags: number;
@@ -71,6 +72,7 @@ export interface UserPreferences {
   enableAI: boolean; // 是否启用 AI 标签推荐
   defaultIncludeThumbnail: boolean; // 默认是否包含封面图
   defaultCreateSnapshot: boolean; // 默认是否创建快照
+  tagTheme?: 'classic' | 'mono' | 'bw';
 }
 
 export interface AIConnectionInfo {

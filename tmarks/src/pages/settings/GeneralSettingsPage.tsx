@@ -131,7 +131,7 @@ export function GeneralSettingsPage() {
             </button>
             <button
               onClick={handleReset}
-              className="btn btn-secondary btn-sm sm:btn flex items-center gap-2"
+              className="btn btn-ghost btn-sm sm:btn flex items-center gap-2 hover:bg-muted/30"
             >
               <RotateCcw className="w-4 h-4" />
               <span className="hidden sm:inline">重置</span>
@@ -139,7 +139,7 @@ export function GeneralSettingsPage() {
             <button
               onClick={handleSave}
               disabled={updatePreferences.isPending}
-              className="btn btn-primary btn-sm sm:btn flex items-center gap-2"
+              className="btn btn-ghost btn-sm sm:btn flex items-center gap-2 hover:bg-muted/30"
             >
               <Save className="w-4 h-4" />
               <span className="hidden sm:inline">{updatePreferences.isPending ? '保存中...' : '保存设置'}</span>

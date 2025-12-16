@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { Plus, Settings2, Check } from 'lucide-react';
+import { Plus, Settings2, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -28,12 +28,13 @@ import { WidgetRenderer } from './widgets/WidgetRenderer';
 import { WidgetSelector } from './widgets/WidgetSelector';
 import { WidgetConfigModal } from './widgets/WidgetConfigModal';
 import { AddShortcutModal } from './AddShortcutModal';
+import { AddBookmarkFolderModal } from './AddBookmarkFolderModal';
 import { FAVICON_API } from '../constants';
 import type { GridItem, GridItemType } from '../types';
 import { getSizeSpan } from './widgets/widgetRegistry';
 
 interface WidgetGridProps {
-  columns: 4 | 6 | 8;
+  columns: 6 | 8 | 10;
 }
 
 // 可排序的网格项包装器
@@ -102,13 +103,17 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
     addGridItem,
     updateGridItem,
     removeGridItem,
-    reorderGridItems,
     getFilteredGridItems,
     migrateToGridItems,
+    currentFolderId,
+    setCurrentFolderId,
+    moveGridItemToFolder,
+    reorderGridItemsInCurrentScope,
   } = useNewtabStore();
 
   const [showWidgetSelector, setShowWidgetSelector] = useState(false);
   const [showAddShortcut, setShowAddShortcut] = useState(false);
+  const [showAddFolder, setShowAddFolder] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [configItem, setConfigItem] = useState<GridItem | null>(null);
@@ -120,6 +125,22 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
 
   // 获取当前分组的网格项
   const filteredItems = getFilteredGridItems();
+
+  const folderPath = useMemo(() => {
+    if (!currentFolderId) return [] as GridItem[];
+    const byId = new Map(gridItems.map((i) => [i.id, i] as const));
+    const path: GridItem[] = [];
+    let cursor: string | null = currentFolderId;
+
+    while (cursor) {
+      const item = byId.get(cursor);
+      if (!item || item.type !== 'bookmarkFolder') break;
+      path.unshift(item);
+      cursor = item.parentId ?? null;
+    }
+
+    return path;
+  }, [currentFolderId, gridItems]);
 
   // 当前分组名称
   const currentGroupName = activeGroupId
@@ -137,9 +158,9 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
 
   // 响应式网格列数
   const gridCols = {
-    4: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',
     6: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6',
     8: 'grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8',
+    10: 'grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10',
   };
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -153,14 +174,15 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
 
       if (!over || active.id === over.id) return;
 
-      const oldIndex = gridItems.findIndex((item) => item.id === active.id);
-      const newIndex = gridItems.findIndex((item) => item.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        reorderGridItems(oldIndex, newIndex);
+      const overItem = gridItems.find((item) => item.id === over.id);
+      if (overItem?.type === 'bookmarkFolder') {
+        moveGridItemToFolder(active.id as string, overItem.id);
+        return;
       }
+
+      reorderGridItemsInCurrentScope(active.id as string, over.id as string);
     },
-    [gridItems, reorderGridItems]
+    [gridItems, moveGridItemToFolder, reorderGridItemsInCurrentScope]
   );
 
   // 添加快捷方式
@@ -184,6 +206,8 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
     (type: GridItemType) => {
       if (type === 'shortcut') {
         setShowAddShortcut(true);
+      } else if (type === 'bookmarkFolder') {
+        setShowAddFolder(true);
       } else {
         addGridItem(type, {
           groupId: activeGroupId || undefined,
@@ -202,6 +226,45 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
   if (filteredItems.length === 0) {
     return (
       <>
+        {folderPath.length > 0 && (
+          <div className="w-full max-w-5xl px-2 mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white/70 text-sm">
+              <button
+                onClick={() => {
+                  const current = folderPath[folderPath.length - 1];
+                  setCurrentFolderId(current?.parentId ?? null);
+                }}
+                className="px-2 py-1 rounded-lg glass hover:bg-white/20 transition-colors flex items-center gap-1"
+                title="返回"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                返回
+              </button>
+              <span className="text-white/40">/</span>
+              {folderPath.map((f, idx) => (
+                <span key={f.id} className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentFolderId(f.id)}
+                    className="hover:text-white transition-colors"
+                  >
+                    {f.bookmarkFolder?.title || '文件夹'}
+                  </button>
+                  {idx < folderPath.length - 1 && (
+                    <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+                  )}
+                </span>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentFolderId(null)}
+              className="px-2 py-1 rounded-lg glass hover:bg-white/20 transition-colors text-white/70 text-sm"
+              title="回到根目录"
+            >
+              根目录
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col items-center gap-4">
           <button
             onClick={() => setShowWidgetSelector(true)}
@@ -225,12 +288,59 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
           onAdd={handleAddShortcut}
           groupName={currentGroupName}
         />
+
+        <AddBookmarkFolderModal
+          isOpen={showAddFolder}
+          onClose={() => setShowAddFolder(false)}
+          onSave={(name) => {
+            addGridItem('bookmarkFolder', {
+              groupId: activeGroupId || undefined,
+              bookmarkFolder: { title: name },
+            });
+          }}
+        />
       </>
     );
   }
 
   return (
     <>
+      {folderPath.length > 0 && (
+        <div className="w-full max-w-5xl px-2 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-white/70 text-sm">
+            <button
+              onClick={() => setCurrentFolderId(folderPath[folderPath.length - 1]?.parentId ?? null)}
+              className="px-2 py-1 rounded-lg glass hover:bg-white/20 transition-colors flex items-center gap-1"
+              title="返回"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              返回
+            </button>
+            <span className="text-white/40">/</span>
+            {folderPath.map((f, idx) => (
+              <span key={f.id} className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentFolderId(f.id)}
+                  className="hover:text-white transition-colors"
+                >
+                  {f.bookmarkFolder?.title || '文件夹'}
+                </button>
+                {idx < folderPath.length - 1 && (
+                  <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+                )}
+              </span>
+            ))}
+          </div>
+          <button
+            onClick={() => setCurrentFolderId(null)}
+            className="px-2 py-1 rounded-lg glass hover:bg-white/20 transition-colors text-white/70 text-sm"
+            title="回到根目录"
+          >
+            根目录
+          </button>
+        </div>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -295,6 +405,17 @@ export function WidgetGrid({ columns }: WidgetGridProps) {
         onClose={() => setShowAddShortcut(false)}
         onAdd={handleAddShortcut}
         groupName={currentGroupName}
+      />
+
+      <AddBookmarkFolderModal
+        isOpen={showAddFolder}
+        onClose={() => setShowAddFolder(false)}
+        onSave={(name) => {
+          addGridItem('bookmarkFolder', {
+            groupId: activeGroupId || undefined,
+            bookmarkFolder: { title: name },
+          });
+        }}
       />
 
       {/* 组件配置弹窗 */}
