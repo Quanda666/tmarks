@@ -5,12 +5,12 @@
  */
 
 import type { PagesFunction } from '@cloudflare/workers-types'
-import type { Env, RouteParams } from '../../../lib/types'
-import { success, badRequest, internalError } from '../../../lib/response'
-import { requireApiKeyAuth, ApiKeyAuthContext } from '../../../middleware/api-key-auth-pages'
-import { isValidUrl, sanitizeString } from '../../../lib/validation'
-import { generateUUID } from '../../../lib/crypto'
-import { invalidatePublicShareCache } from '../../shared/cache'
+import type { Env, RouteParams } from '../../../../lib/types'
+import { success, badRequest, internalError } from '../../../../lib/response'
+import { requireApiKeyAuth, ApiKeyAuthContext } from '../../../../middleware/api-key-auth-pages'
+import { isValidUrl, sanitizeString } from '../../../../lib/validation'
+import { generateUUID } from '../../../../lib/crypto'
+import { invalidatePublicShareCache } from '../../../shared/cache'
 
 interface BatchCreateBookmarkItem {
   title: string
@@ -203,7 +203,7 @@ export const onRequestPost: PagesFunction<Env, RouteParams, ApiKeyAuthContext>[]
 
           // 处理标签
           if (item.tags && item.tags.length > 0) {
-            const { createOrLinkTags } = await import('../../../lib/tags')
+            const { createOrLinkTags } = await import('../../../../lib/tags')
             await createOrLinkTags(context.env.DB, bookmarkId, item.tags, userId)
           }
 
